@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solernou Generador</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family: Arial; padding:20px; max-width:600px; margin:auto;">
+
+  <h2>Generador de Fichas - Solernou</h2>
+
+  <input id="link" placeholder="Pegá el link" style="width:100%; padding:10px;" />
+  <button onclick="generar()" style="margin-top:10px; width:100%; padding:10px;">
+    Generar Ficha
+  </button>
+
+  <div id="resultado" style="margin-top:20px;"></div>
+
+  <script>
+    function generar() {
+      const url = document.getElementById("link").value;
+
+      document.getElementById("resultado").innerHTML = `
+        <h3>Propiedad</h3>
+        <p><a href="${url}" target="_blank">Ver publicación</a></p>
+
+        <h4>Solernou Servicios Inmobiliarios</h4>
+        <button onclick="window.open('https://wa.me/5491166169242')">
+          Contactar por WhatsApp
+        </button>
+
+        <br><br>
+
+        <button onclick="compartir('${url}')">
+          Compartir por WhatsApp
+        </button>
+      `;
+    }
+
+    function compartir(url) {
+      const texto = "Consulto por esta propiedad: " + url;
+      window.open("https://wa.me/5491166169242?text=" + encodeURIComponent(texto));
+    }
+  </script>
+
+</body>
+</html>
