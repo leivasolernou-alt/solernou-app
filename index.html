@@ -2,33 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Solernou Ficha PRO</title>
+  <title>Solernou Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;margin:0;padding:20px}
-    .container{max-width:720px;margin:auto}
-    .card{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);overflow:hidden}
+    body{font-family:Arial;background:#f2f2f2;margin:0;padding:20px}
+    .container{max-width:900px;margin:auto}
+    .card{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);overflow:hidden;margin-top:20px}
     .img{width:100%;height:260px;object-fit:cover;background:#ddd}
     .content{padding:16px}
-    .title{font-size:20px;font-weight:700;margin-bottom:8px}
-    .desc{font-size:14px;color:#555;margin-bottom:12px}
-    .btn{display:block;width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+    .title{font-size:20px;font-weight:700}
+    .desc{font-size:14px;color:#555;margin:10px 0}
+    .btn{display:block;width:100%;padding:12px;margin-top:8px;border:none;border-radius:8px;cursor:pointer}
     .primary{background:#000;color:#fff}
     .whatsapp{background:#25D366;color:#fff}
-    .ghost{background:#eee}
     input{width:100%;padding:12px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px}
+    .linkBox{background:#eee;padding:10px;border-radius:8px;font-size:12px;word-break:break-all;margin-top:10px}
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Generador PRO - Solernou</h2>
-
-  <input id="link" placeholder="Pegá el link de la propiedad" />
-  <button class="btn primary" onclick="generar()">Generar Ficha</button>
-
-  <div id="resultado" style="margin-top:20px"></div>
-</div>
+<div class="container" id="app"></div>
 
 <script>
 const MIS_DATOS = {
@@ -36,42 +29,82 @@ const MIS_DATOS = {
   whatsapp: "5491166169242"
 };
 
-async function generar(){
-  const url = document.getElementById('link').value;
-  if(!url){alert('Pegá un link');return;}
+let propiedades = JSON.parse(localStorage.getItem('props') || '[]');
 
-  let titulo = 'Propiedad en venta';
-  let descripcion = 'Consultanos para más información';
-  let imagen = '';
+function guardar(){
+  localStorage.setItem('props', JSON.stringify(propiedades));
+}
+
+async function generar(url){
+  let titulo='Propiedad';
+  let descripcion='';
+  let imagen='';
 
   try{
     const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
     const data = await res.json();
     const doc = new DOMParser().parseFromString(data.contents,'text/html');
 
-    titulo = doc.querySelector("meta[property='og:title']")?.content || doc.title || titulo;
-    descripcion = doc.querySelector("meta[property='og:description']")?.content || descripcion;
+    titulo = doc.querySelector("meta[property='og:title']")?.content || doc.title;
+    descripcion = doc.querySelector("meta[property='og:description']")?.content || '';
     imagen = doc.querySelector("meta[property='og:image']")?.content || '';
-  }catch(e){console.log('fallback');}
+  }catch(e){}
 
-  document.getElementById('resultado').innerHTML = `
-    <div class="card">
-      ${imagen ? `<img src="${imagen}" class="img">` : `<div class="img"></div>`}
-      <div class="content">
-        <div class="title">${titulo}</div>
-        <div class="desc">${descripcion}</div>
+  const id = Date.now();
+  propiedades.push({id,titulo,descripcion,imagen,url});
+  guardar();
+  location.hash = "#/ficha/"+id;
+}
 
-        <button class="btn primary" onclick="window.open('${url}')">Ver propiedad</button>
-        <button class="btn whatsapp" onclick="contactar('${url}')">Contactar por WhatsApp</button>
-        <button class="btn ghost" onclick="copiar('${url}','${titulo}')">Copiar texto para publicar</button>
+function vistaHome(){
+  return `
+    <h2>Solernou Portal</h2>
+    <input id="link" placeholder="Pegá link propiedad" />
+    <button class="btn primary" onclick="generar(document.getElementById('link').value)">Generar</button>
 
-        <div style="margin-top:12px;font-size:13px;color:#777">
-          ${MIS_DATOS.nombre}<br>
-          WhatsApp: 11-6616-9242
+    <h3>Mis propiedades</h3>
+    ${propiedades.map(p=>`
+      <div class="card">
+        ${p.imagen ? `<img src="${p.imagen}" class="img">` : `<div class="img"></div>`}
+        <div class="content">
+          <div class="title">${p.titulo}</div>
+          <button class="btn" onclick="ver(${p.id})">Ver ficha</button>
         </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function vistaFicha(id){
+  const p = propiedades.find(x=>x.id==id);
+  if(!p) return '<p>No encontrada</p>';
+
+  const link = location.origin + location.pathname + '#/ficha/' + id;
+
+  return `
+    <div class="card">
+      ${p.imagen ? `<img src="${p.imagen}" class="img">` : `<div class="img"></div>`}
+      <div class="content">
+        <div class="title">${p.titulo}</div>
+        <div class="desc">${p.descripcion}</div>
+
+        <button class="btn primary" onclick="window.open('${p.url}')">Ver propiedad</button>
+        <button class="btn whatsapp" onclick="contactar('${p.url}')">WhatsApp</button>
+
+        <div class="linkBox">${link}</div>
+        <button class="btn" onclick="copiarLink('${link}')">Copiar link</button>
       </div>
     </div>
   `;
+}
+
+function ver(id){
+  location.hash = "#/ficha/"+id;
+}
+
+function copiarLink(link){
+  navigator.clipboard.writeText(link);
+  alert('Link copiado');
 }
 
 function contactar(url){
@@ -79,11 +112,18 @@ function contactar(url){
   window.open(`https://wa.me/${MIS_DATOS.whatsapp}?text=${encodeURIComponent(msg)}`);
 }
 
-function copiar(url,titulo){
-  const texto = `${titulo}\n\nVer propiedad: ${url}\n\nContacto: ${MIS_DATOS.nombre} - 11-6616-9242`;
-  navigator.clipboard.writeText(texto);
-  alert('Texto copiado para publicar');
+function router(){
+  const hash = location.hash;
+  if(hash.startsWith('#/ficha/')){
+    const id = hash.split('/')[2];
+    document.getElementById('app').innerHTML = vistaFicha(id);
+  }else{
+    document.getElementById('app').innerHTML = vistaHome();
+  }
 }
+
+window.addEventListener('hashchange', router);
+router();
 </script>
 
 </body>
