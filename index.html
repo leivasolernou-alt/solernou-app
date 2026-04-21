@@ -5,8 +5,10 @@
   <title>Solernou Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{font-family:Arial;background:#f2f2f2;margin:0;padding:20px}
-    .container{max-width:900px;margin:auto}
+    body{font-family:Arial;background:#f2f2f2;margin:0}
+    .header{background:#000;color:#fff;padding:15px;text-align:center}
+    .logo{max-width:140px;margin-bottom:8px}
+    .container{max-width:900px;margin:auto;padding:20px}
     .card{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);overflow:hidden;margin-top:20px}
     .img{width:100%;height:260px;object-fit:cover;background:#ddd}
     .content{padding:16px}
@@ -17,9 +19,17 @@
     .whatsapp{background:#25D366;color:#fff}
     input{width:100%;padding:12px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px}
     .linkBox{background:#eee;padding:10px;border-radius:8px;font-size:12px;word-break:break-all;margin-top:10px}
+    .contacto{margin-top:10px;font-size:13px;color:#ddd}
   </style>
 </head>
 <body>
+
+<div class="header">
+  <!-- REEMPLAZÁ la URL del logo -->
+  <img src="https://via.placeholder.com/140x60?text=LOGO" class="logo" />
+  <div>Solernou Servicios Inmobiliarios</div>
+  <div class="contacto">WhatsApp: 11-6616-9242</div>
+</div>
 
 <div class="container" id="app"></div>
 
@@ -36,8 +46,10 @@ function guardar(){
 }
 
 async function generar(url){
-  let titulo='Propiedad';
-  let descripcion='';
+  if(!url){alert('Pegá un link');return;}
+
+  let titulo='Propiedad en venta';
+  let descripcion='Consultanos para más info';
   let imagen='';
 
   try{
@@ -46,7 +58,7 @@ async function generar(url){
     const doc = new DOMParser().parseFromString(data.contents,'text/html');
 
     titulo = doc.querySelector("meta[property='og:title']")?.content || doc.title;
-    descripcion = doc.querySelector("meta[property='og:description']")?.content || '';
+    descripcion = doc.querySelector("meta[property='og:description']")?.content || descripcion;
     imagen = doc.querySelector("meta[property='og:image']")?.content || '';
   }catch(e){}
 
@@ -58,9 +70,9 @@ async function generar(url){
 
 function vistaHome(){
   return `
-    <h2>Solernou Portal</h2>
-    <input id="link" placeholder="Pegá link propiedad" />
-    <button class="btn primary" onclick="generar(document.getElementById('link').value)">Generar</button>
+    <h2>Generar ficha</h2>
+    <input id="link" placeholder="Pegá link de la propiedad" />
+    <button class="btn primary" onclick="generar(document.getElementById('link').value)">Generar Ficha</button>
 
     <h3>Mis propiedades</h3>
     ${propiedades.map(p=>`
@@ -88,11 +100,16 @@ function vistaFicha(id){
         <div class="title">${p.titulo}</div>
         <div class="desc">${p.descripcion}</div>
 
-        <button class="btn primary" onclick="window.open('${p.url}')">Ver propiedad</button>
-        <button class="btn whatsapp" onclick="contactar('${p.url}')">WhatsApp</button>
+        <button class="btn primary" onclick="window.open('${p.url}')">Ver propiedad original</button>
+        <button class="btn whatsapp" onclick="contactar('${p.url}')">Contactar por WhatsApp</button>
 
         <div class="linkBox">${link}</div>
-        <button class="btn" onclick="copiarLink('${link}')">Copiar link</button>
+        <button class="btn" onclick="copiarLink('${link}')">Copiar link para compartir</button>
+
+        <div style="margin-top:15px;font-size:13px;color:#777">
+          <strong>${MIS_DATOS.nombre}</strong><br>
+          WhatsApp: 11-6616-9242
+        </div>
       </div>
     </div>
   `;
